@@ -1,0 +1,9 @@
+init_config:
+
+instances:
+  - host: flog
+    port: 9000
+  - host: grafana
+    port: 6379
+  - host: gateway
+    port: 3100

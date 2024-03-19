@@ -5,6 +5,20 @@ networks:
   loki:
 
 services:
+  datadog:
+    build: datadog
+    pid: host
+    environment:
+      - DD_API_KEY=${DD_API_KEY}
+      - DD_SITE=ap1.datadoghq.com
+      - DD_LOGS_ENABLED=true
+      - DD_APM_ENABLED=true
+      - DD_APM_NON_LOCAL_TRAFFIC=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup:/host/sys/fs/cgroup:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
   read:
     image: grafana/loki:2.7.1
     command: "-config.file=/etc/loki/config.yaml -target=read"
@@ -117,6 +131,8 @@ services:
       retries: 5
     networks:
       - loki
+    labels:
+      com.datadoghq.ad.logs: '[ { "source": "grafana", "service": "grafana" } ]'
 
   gateway:
     image: nginx:latest
@@ -186,9 +202,15 @@ services:
       retries: 5
     networks:
       - loki
+    labels:
+      com.datadoghq.ad.logs: '[ { "source": "gateway", "service": "gateway" } ]'
 
   flog:
     image: mingrammer/flog
     command: -f json -d 1s -l
+    ports:
+      - "9000:9000"
+    labels:
+      com.datadoghq.ad.logs: '[ { "source": "flog", "service": "flog" } ]'
     networks:
       - loki
